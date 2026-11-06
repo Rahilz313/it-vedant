@@ -186,6 +186,7 @@ resource "aws_iam_role_policy" "github_deploy" {
         Sid    = "PushProjectImages"
         Effect = "Allow"
         Action = [
+          "ecr:BatchGetImage",
           "ecr:BatchCheckLayerAvailability",
           "ecr:CompleteLayerUpload",
           "ecr:InitiateLayerUpload",
