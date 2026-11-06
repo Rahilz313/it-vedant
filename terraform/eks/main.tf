@@ -13,7 +13,7 @@ data "aws_caller_identity" "current" {}
 
 locals {
   common_name = var.project_name
-  github_sub  = "repo:${var.github_repository}:ref:refs/heads/${var.github_branch}"
+  github_sub  = "repo:Rahilz313@126873703/it-vedant@1444596056:ref:refs/heads/${var.github_branch}"
 }
 
 data "aws_iam_openid_connect_provider" "github" {
