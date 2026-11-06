@@ -1,0 +1,24 @@
+# Terraform state and local configuration
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfbackend
+**/backend.hcl
+terraform.tfvars
+terraform.tfvars.json
+crash.log
+crash.*.log
+
+# Local AWS credentials/config and generated kubeconfig
+.aws/
+kubeconfig
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Editor/OS
+.vscode/
+.DS_Store

@@ -1,0 +1,30 @@
+#!/bin/bash
+set -euo pipefail
+
+dnf install -y python3
+install -d -o ec2-user -g ec2-user /opt/demo-app
+printf '%s' '${app_source_base64}' | base64 --decode > /opt/demo-app/server.py
+chown ec2-user:ec2-user /opt/demo-app/server.py
+
+cat > /etc/systemd/system/demo-app.service <<'SERVICE'
+[Unit]
+Description=it-vedant demo HTTP service
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+ExecStart=/usr/bin/python3 /opt/demo-app/server.py
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+systemctl daemon-reload
+systemctl enable --now demo-app.service

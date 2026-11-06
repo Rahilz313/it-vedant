@@ -1,0 +1,61 @@
+name: Test, build, and deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check Python syntax
+        run: python -m compileall -q app
+      - name: Run unit tests
+        run: python -m unittest discover -s app/tests -v
+      - name: Build container
+        run: docker build --tag it-vedant-demo:${{ github.sha }} ./app
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ vars.AWS_ACCOUNT_ID }}
+      ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS credentials with GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build --tag "$ECR_REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA" ./app
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$GITHUB_SHA"
+      - name: Configure kubectl
+        run: aws eks update-kubeconfig --region "$AWS_REGION" --name "$EKS_CLUSTER_NAME"
+      - name: Deploy to EKS
+        env:
+          IMAGE: "${{ vars.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}"
+        run: |
+          sed "s|IMAGE_PLACEHOLDER|$IMAGE|g" app/k8s/deployment.yaml | kubectl apply -f -
+          kubectl rollout status deployment/demo-app --namespace default --timeout=180s
