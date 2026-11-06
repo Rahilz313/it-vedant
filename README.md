@@ -110,7 +110,7 @@ The `network` state output is the handoff contract for later stacks. EKS and ASG
 
    These are identifiers, not credentials. `AWS_DEPLOY_ROLE_ARN` is the new repository-scoped role ARN created by Terraform. The EKS stack grants it access only to the `default` namespace. If you change the repository or branch, update `github_repository` or `github_branch` and apply the EKS stack again.
 
-3. Push a commit to `main`. The GitHub Actions workflow runs the unit tests and Docker build; on `main`, it assumes the OIDC role, pushes an immutable commit-tagged image to ECR, and deploys to the `default` namespace. Pull requests run tests and build the image without AWS credentials.
+3. Push a commit to `main`, or use **Actions → Test, build, and deploy → Run workflow** on the `main` branch. The workflow runs the unit tests and Docker build; on `main`, it assumes the OIDC role, pushes an immutable image tagged with the commit SHA and workflow run/attempt, and deploys to the `default` namespace. Pull requests run tests and build the image without AWS credentials.
 
 4. Verify locally with your SSO profile:
 
