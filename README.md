@@ -122,6 +122,8 @@ The `network` state output is the handoff contract for later stacks. EKS and ASG
 
 The GitHub role can push only to this ECR repository, describe only this EKS cluster, and edit resources only in the `default` namespace. The EKS public API endpoint defaults to allowing connections from any IP because GitHub-hosted runner addresses change; Kubernetes access still requires AWS IAM authentication and the scoped EKS access entry. For a fixed self-hosted runner or VPN, set `cluster_endpoint_public_access_cidrs` to trusted CIDRs and apply again.
 
+The ECR repository is configured with `force_delete = true`. Destroying the EKS stack therefore deletes the repository and all images it contains; export or retain any image you need before destroying the stack.
+
 ## Deploy the CloudFront static site
 
 ```powershell
